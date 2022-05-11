@@ -1,4 +1,5 @@
 from numba import jit
+from flask import Flask
 import random
 
 @jit(nopython=True)
@@ -36,4 +37,18 @@ def executeServerSide(code):
 
 
 def startExecuting(code):
-    ray.remote(executeServerSide(code))
+    coded = ray.remote(executeServerSide(code))
+    return ray.get(coded) #return decoded
+    
+def runserver():
+    app = Flask(__name__)
+
+    #create route for executing code
+    @app.route('/runCode', methods=['GET'])
+    def code():
+        try:
+            text = startExecuting(request.args.get('q')) #start executing url arg named "q"
+            return text
+        except Exception as er:
+            print(er)
+            return ""
